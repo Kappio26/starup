@@ -1,0 +1,315 @@
+<?php
+session_start();
+require_once('include/Connection.php');
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Aplikasi Cuci Kendaraan Panggil Kerumah</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/lightbox.css">
+    <link type="text/css" rel="stylesheet" href="css/cm-overlay.css" />
+    <link href="//fonts.googleapis.com/css?family=Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&amp;subset=latin-ext" rel="stylesheet">
+    <link href="css/styleeee.css" rel="stylesheet" type="text/css" media="all" />
+    <link href="//fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
+    <link href="//fonts.googleapis.com/css?family=Sintony:400,700&amp;subset=latin-ext" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="images/7.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- Add the Google Fonts link for Pacifico -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+
+    <!-- Sertakan Font Awesome -->
+    <script src='https://kit.fontawesome.com/a076d05399.js' crossorigin='anonymous'></script>
+    <style>
+      #map{
+        height: 600px;
+        width: 100%;
+      }
+    </style>
+</head>
+
+<body>
+
+<div class="bg-image">
+        <div class="overlay"></div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-teal">
+  <div class="container-fluid">
+  <a class="navbar-brand" href="#">
+    <i class="fas fa-edit"></i> EDIT PROFIL
+</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav">
+      <li class="nav-item">
+    <a class="nav-link" href="welcome.php">
+        <i class="fas fa-home"></i> Beranda
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="order.php">
+        <i class="fas fa-shopping-cart"></i> Order
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="orderansaya.php">
+        <i class="fas fa-clipboard-check"></i> Cek Pesanan
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link" href="gantipass.php">
+        <i class="fas fa-pencil-alt"></i> Edit Profil
+    </a>
+</li>
+    <a onclick="confirmLogout()" class="btn btn-link logout-button" style="color: white;"><i class="fas fa-sign-out-alt"></i></a>
+</li>
+
+    </div>
+  </div>
+</nav>
+  </div>
+  <script>
+        function confirmLogout() {
+            var confirmLogout = confirm("Apakah Anda ingin keluar?");
+            if (confirmLogout) {
+                window.location.href = "logout.php";
+            }
+        }
+    </script>
+    <?php
+    $username = $_SESSION['username'];
+
+        $query="SELECT * FROM user_login WHERE username='$username'";
+        $result = $db->query($query);
+        $row = $result->fetch_assoc();
+            ?>
+    <!-- Tambahkan konten setting akun di sini -->
+    <div class="container mt-5">
+        <input type="hidden" name="lat" value="<?= $row['lat'] ?>" id="latHide">
+        <input value="<?= $row['lon'] ?>" type="hidden" name="lon" id="lonHide">
+    <form method="post" action="updateProfil.php">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="nama" class="form-label">NAMA</label>
+          <input type="tel" class="form-control" id="nama" name="nama" value="<?= $row["nama"] ?>">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="alamat" class="form-label">Alamat</label>
+          <textarea class="form-control" id="alamat" name="alamat" rows="3"><?= $row["alamat"] ?></textarea>
+          <div id="map"></div>
+          <input type="hidden" class="" name="lat" id="lat">
+          <input type="hidden" class="" name="lon" id="lon">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="no_hp" class="form-label">Nomor Telepon</label>
+          <input type="number" class="form-control" id="no_hp" name="no_hp" value="<?= $row["no_hp"] ?>">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="Password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="Password" name="password">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+        </div>
+      </div>
+    </form>
+  </div>
+    <?php
+                            
+                            ?>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+
+        var lonHide = document.getElementById('lonHide').value
+        var latHide = document.getElementById('latHide').value
+
+        // Inisialisasi peta
+        var map = L.map('map').setView([latHide, lonHide], 15); // Koordinat Makassar, Sulawesi Selatan
+
+        // Tambahkan tile layer ke peta
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var marker = L.marker([latHide, lonHide]).addTo(map);
+
+        // Fungsi untuk mendapatkan alamat dari koordinat
+        function getAddress(lat, lon) {
+            var url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.display_name) {
+                        document.getElementById('alamat').value = data.display_name;
+                    } else {
+                        document.getElementById('alamat').value = 'Alamat tidak ditemukan';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching address:', error);
+                    document.getElementById('alamat').value = 'Error fetching address';
+                });
+        }
+
+        // Event listener untuk klik pada peta
+        map.on('click', function(e) {
+            var lat = e.latlng.lat;
+            var lon = e.latlng.lng;
+            var latDom = document.getElementById('lat').value = lat
+            var lonDom = document.getElementById('lon').value = lon
+
+            // Jika marker sudah ada, hapus terlebih dahulu
+            if (marker) {
+                map.removeLayer(marker);
+            }
+
+            // Tambahkan marker baru pada posisi yang diklik
+            marker = L.marker([lat, lon]).addTo(map);
+
+            // Dapatkan alamat dari koordinat dan tampilkan di text field
+            getAddress(lat, lon);
+        });
+    </script>
+</body>
+
+</html>
+<style>
+
+.welcome-text h1 {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    white-space: nowrap; /* Prevent text from wrapping to the next line */
+    overflow: hidden; /* Hide overflowed content */
+    font-size: 3rem; /* Adjust the font size as needed */
+    font-family: 'Roboto', sans-serif; /* Optional: Use a specific font family */
+    font-weight: bold; /* Optional: Add font weight if desired */
+    color: #ffffff; /* Set the text color (white in this example) */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); /* Optional: Add a text shadow */
+}
+
+.navbar-nav .nav-link i {
+        font-size: 20px;
+        color: white;
+        }
+
+        .navbar-nav .nav-item:last-child .nav-link i {
+        color: #008080;
+        }
+
+        .navbar-nav .nav-item:last-child .logout-button {
+        border: none;
+        padding: 0;
+        font-size: 16px;
+        color: white;
+        background-color: #008080;
+        cursor: pointer;
+        }
+        body {
+            font-family: 'Roboto Condensed', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: #008080;
+            height: 70px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-weight: bold;
+        }
+
+        .navbar-brand {
+            font-family: "Verdana";
+            color: white ;
+            font-size: 20px;
+        }
+
+      .btn-primary {
+          background-color: #008B8B; /* Change the button background color to your desired color */
+          border-color: #008B8B; /* Change the button border color to your desired color */
+      }
+
+      .btn-primary:hover {
+          background-color: #c0392b; /* Change the button background color on hover to your desired color */
+          border-color: #c0392b; /* Change the button border color on hover to your desired color */
+      }
+      /* Additional styles for card */
+      .card {
+          margin-bottom: 20px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          transition: transform 0.3s;
+      }
+
+      .card:hover {
+          transform: scale(1.05);
+      }
+
+      /* Styles for card title and description */
+      .card-title {
+          font-size: 1.5rem;
+          font-weight: bold;
+      }
+
+      .card-text {
+          font-size: 1.2rem;
+      }
+
+      /* Styles for button */
+      .btn-primary {
+          font-size: 1.2rem;
+      }
+      @keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@-webkit-keyframes slideIn {
+    from {
+        -webkit-transform: translateX(-100%);
+    }
+    to {
+        -webkit-transform: translateX(0);
+    }
+}
+
+.welcome-text h1 {
+    animation: slideIn 59s ease-in-out;
+    -webkit-animation: slideIn 20s ease-in-out;
+}
+
+      
+  </style   
